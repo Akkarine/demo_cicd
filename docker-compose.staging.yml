@@ -1,0 +1,13 @@
+version: '3.7'
+
+services:
+
+  gitlab-runner:
+    image: gitlab/gitlab-runner:latest
+    restart: always
+    container_name: gitlab-runner
+    volumes:
+      - /srv/gitlab-runner/config:/etc/gitlab-runner
+      - /var/run/docker.sock:/var/run/docker.sock
+      - /srv/gitlab-runner/jobs:/jobs
+      - /srv:/srv

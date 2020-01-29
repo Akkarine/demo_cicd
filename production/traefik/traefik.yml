@@ -1,0 +1,51 @@
+global:
+  sendAnonymousUsage: true
+
+entryPoints:
+  ssh-gitlab:
+    address: ":1023"
+  web:
+    address: ":80"
+  web-secure:
+    address: ":443"
+  traefik:
+    address: ":8080"
+
+providers:
+  file:
+    filename: "/etc/traefik/dynamic-conf.yml"
+  docker:
+    # https://docs.traefik.io/providers/docker/#endpoint
+    # https://docs.docker.com/engine/security/https/
+    endpoint: "tcp://192.168.88.3:2376"
+    exposedByDefault: false
+    useBindPortIP: true
+    tls:
+      ca: /certs/staging/ca.pem
+      cert: /certs/staging/cert.pem
+      key: /certs/staging/key.pem
+
+api:
+  dashboard: true
+#  insecure: true
+
+log:
+  filepath: "/logs/traefik.log"
+  format: common
+  level: INFO
+
+accessLog:
+  filepath: "/logs/access.log"
+#  bufferingSize: 100
+  filters:
+    statusCodes:
+      - "400-526"
+
+certificatesResolvers:
+  letsencrypt:
+    acme:
+      email: "kriv@sngy.ru"
+      storage: "/letsencrypt/acme.json"
+      # закомменитровать caServer, если тестовый challenge будет успешен
+      # caServer: "https://acme-staging-v02.api.letsencrypt.org/directory"
+      tlsChallenge: {}

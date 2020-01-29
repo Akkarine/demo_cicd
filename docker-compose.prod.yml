@@ -1,0 +1,45 @@
+version: '3.7'
+
+services:
+
+  gitlab-runner:
+    image: gitlab/gitlab-runner:latest
+    restart: always
+    container_name: gitlab-runner
+    volumes:
+      - /srv/gitlab-runner/config:/etc/gitlab-runner
+      - /var/run/docker.sock:/var/run/docker.sock
+      - /srv:/srv
+
+  letsencrypt-dns:
+    restart: always
+    image: adferrand/letsencrypt-dns:latest
+    container_name: "letsencrypt-dns"
+    volumes:
+      - /srv/letsencrypt-dns:/etc/letsencrypt
+      - /usr/share/zoneinfo:/usr/share/zoneinfo:ro
+    environment:
+      - "LETSENCRYPT_USER_MAIL=$LETSENCRYPT_EMAIL"
+      - "LEXICON_PROVIDER=yandex"
+      - "LEXICON_PROVIDER_OPTIONS=--auth-token=$DNS_PROVIDER_API_TOKEN"
+      - "LEXICON_SLEEP_TIME=300"
+      - "TZ=Europe/Volgograd"
+
+  traefik:
+    restart: always
+    image: traefik:latest
+    container_name: traefik
+    ports:
+      - 1023:1023
+      - 80:80
+      - 443:443
+      - 8080:8080
+    volumes:
+      - /srv/traefik/traefik.yml:/etc/traefik/traefik.yml
+      - /srv/traefik/dynamic-conf.yml:/etc/traefik/dynamic-conf.yml
+      - /srv/traefik/letsencrypt:/letsencrypt
+      - /srv/traefik/certs:/certs
+      - /srv/traefik/logs:/logs
+      - /usr/share/zoneinfo:/usr/share/zoneinfo:ro
+    environment:
+      - "TZ=Europe/Volgograd"

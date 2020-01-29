@@ -1,0 +1,9 @@
+.idea
+!.idea/modules.xml
+!.idea/vcs.xml
+!.idea/deployment.xml
+certs/
+!certs/production-docker/.gitkeep
+!certs/services-docker/.gitkeep
+!certs/staging-docker/.gitkeep
+production/demo-prj/db/backupsrvkey

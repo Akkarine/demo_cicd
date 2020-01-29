@@ -1,0 +1,6 @@
+.git
+.idea
+.gitlab-ci.yml
+*.iml
+*.md
+/certs
