@@ -156,7 +156,7 @@ sudo systemctl daemon-reload && sudo systemctl restart docker.service \
     ```shell script
     # Создаём структуру папок
     sudo mkdir -p /srv/services/gitlab/{config,data,logs}
-    sudo docker-compose -f docker-compose.services.yml up -d
+    sudo docker-compose -f docker-compose.services.yml -p gitlab up -d
     ```
 
 #### Установка GitLab Omnibus прямо на машину
@@ -166,25 +166,31 @@ sudo nano /etc/gitlab/gitlab.rb
 #######################################
 external_url "https://gitlab.company.ru"
 nginx['proxy_set_headers'] = {
+  "Host" => "$http_host",
+  "X-Real-IP" => "$remote_addr",
+  "X-Forwarded-For" => "$proxy_add_x_forwarded_for",
   "X-Forwarded-Proto" => "https",
-  "X-Forwarded-Ssl" => "on",
-  "X-Forwarded-Proto" => "http"
+  "X-Forwarded-Ssl" => "on"
 }
 nginx['listen_port'] = 80
 nginx['listen_https'] = false
+gitlab_rails['time_zone'] = 'Europe/Volgograd'
+gitlab_rails['trusted_proxies'] = ['192.168.88.1', '192.168.88.2']
 registry_external_url 'https://registry.company.ru'
 registry['enable'] =true
-registry['registry_http_addr'] = "localhost:5000"
 registry_nginx['enable'] = true
 registry_nginx['proxy_set_headers'] = {
-#  "Host" => "$http_host",
+  "Host" => "$http_host",
   "X-Real-IP" => "$remote_addr",
-#  "X-Forwarded-For" => "$proxy_add_x_forwarded_for",
-  "X-Forwarded-Proto" => "http",
+  "X-Forwarded-For" => "$proxy_add_x_forwarded_for",
+  "X-Forwarded-Proto" => "https",
   "X-Forwarded-Ssl" => "on"
 }
-registry_nginx['listen_port'] = 80
+registry_nginx['listen_port'] = 5005
 registry_nginx['listen_https'] = false
+nginx['real_ip_trusted_addresses'] = ['192.168.88.1', '192.168.88.2']
+nginx['real_ip_header'] = 'X-Forwarded-For'
+nginx['real_ip_recursive'] = 'on'
 sudo gitlab-ctl reconfigure
 # nginx требует отдельного перезапуска
 sudo gitlab-ctl hup nginx
@@ -235,7 +241,8 @@ sudo docker run -d \
   * $TZ, https://gitlab.com/gitlab-com/support-forum/issues/4051
 
 #### Поднимаем gitlab-runner
-* Доступ к /srv нужен, если захотим обновлять **Traefik**, **letsencrypt-dns** прямо из проекта на **GitLab**
+* Доступ к /srv нужен, если захотим обновлять **Traefik**, **letsencrypt-dns** прямо из проекта на **GitLab** и управлять
+данными из gitlab-runner на хосте (например, удалить неисправную БД)
 ```shell script
 cd ~/project
 sudo docker-compose -f docker-compose.prod.yml -p prod up -d gitlab-runner
@@ -419,3 +426,5 @@ sudo docker run --rm -it -v /var/run/docker.sock:/var/run/docker.sock wagoodman/
   * https://t.me/ru_docker
   * https://t.me/PostgreSQL_1C_Linux
   * https://t.me/werf_ru
+  
+* Доклады Дмитрия Столярова из компании "Флант"

@@ -8,30 +8,42 @@ services:
     container_name: gitlab
     hostname: 'gitlab.it34demo.sngy.ru'
     environment:
+      # https://community.hetzner.com/tutorials/gitlab-server-with-docker#step-5-prepare-the-registry
+      # https://www.davd.io/byecloud-gitlab-with-docker-and-traefik/
+      # https://forum.gitlab.com/t/container-registry-behind-reverse-proxy/6848/2
       GITLAB_OMNIBUS_CONFIG: |
+        grafana['enable'] = false
         external_url "https://gitlab.it34demo.sngy.ru"
         nginx['proxy_set_headers'] = {
+          "Host" => "$$http_host",
+          "X-Real-IP" => "$$remote_addr",
+          "X-Forwarded-For" => "$$proxy_add_x_forwarded_for",
           "X-Forwarded-Proto" => "https",
-          "X-Forwarded-Ssl" => "on",
-          "X-Forwarded-Proto" => "http"
+          "X-Forwarded-Ssl" => "on"
         }
         nginx['listen_port'] = 80
         nginx['listen_https'] = false
+        gitlab_rails['time_zone'] = 'Europe/Volgograd'
+        gitlab_rails['trusted_proxies'] = ['192.168.88.1', '192.168.88.2']
         registry_external_url 'https://registry.it34demo.sngy.ru'
         registry['enable'] =true
-        registry['registry_http_addr'] = "localhost:5000"
         registry_nginx['enable'] = true
         registry_nginx['proxy_set_headers'] = {
+          "Host" => "$$http_host",
           "X-Real-IP" => "$$remote_addr",
-          "X-Forwarded-Proto" => "http",
+          "X-Forwarded-For" => "$$proxy_add_x_forwarded_for",
+          "X-Forwarded-Proto" => "https",
           "X-Forwarded-Ssl" => "on"
         }
-        registry_nginx['listen_port'] = 80
+        registry_nginx['listen_port'] = 5005
         registry_nginx['listen_https'] = false
+        nginx['real_ip_trusted_addresses'] = ['192.168.88.1', '192.168.88.2']
+        nginx['real_ip_header'] = 'X-Forwarded-For'
+        nginx['real_ip_recursive'] = 'on'
     ports:
       - '80:80'
       - '1023:22'
-      - '5000:5000'
+      - '5000:5005'
     volumes:
       - '/srv/gitlab/config:/etc/gitlab'
       - '/srv/gitlab/logs:/var/log/gitlab'

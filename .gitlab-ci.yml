@@ -11,9 +11,8 @@ update-letsencrypt-dns:
   image: tmaier/docker-compose:latest
   stage: deploy
   script:
-    # Так как gitlab-runner хранит текущую git-версию в своей папке,
-    # а в докер-файле прописан абсолютный путь, необходимо скопировать для него файлы.
-    - sudo cp $CI_PROJECT_DIR/production/letsencrypt-dns/domains.conf /srv/letsencrypt-dns/domains.conf
+    # gitlab-runner хранит текущую git-версию файлов в своей папке работающего раннера джобы
+    - cp -r $CI_PROJECT_DIR/production/letsencrypt-dns/domains.conf /srv/letsencrypt-dns/domains.conf
     - docker-compose -f docker-compose.prod.yml pull letsencrypt-dns
     - docker-compose -f docker-compose.prod.yml up -d letsencrypt-dns
   when: manual
@@ -24,9 +23,9 @@ update-traefik:
   image: tmaier/docker-compose:latest
   stage: deploy
   script:
-    - sudo cp -r $CI_PROJECT_DIR/production/traefik/dynamic-conf.yml /srv/traefik/dynamic-conf.yml
-    - sudo cp -r $CI_PROJECT_DIR/production/traefik/traefik.yml /srv/traefik/traefik.yml
-    - docker-compose -f docker-compose.prod.yml pull traefik
+    - cp -r $CI_PROJECT_DIR/production/traefik/dynamic-conf.yml /srv/traefik/dynamic-conf.yml
+    - cp -r $CI_PROJECT_DIR/production/traefik/traefik.yml /srv/traefik/traefik.yml
+    - docker-compose -f docker-compose.prod.yml -p prod pull traefik
     - docker-compose -f docker-compose.prod.yml -p prod up -d traefik
   when: manual
   tags:
@@ -42,17 +41,14 @@ update-production-runner:
   <<: *update-runners
   script:
     - docker-compose -f docker-compose.prod.yml pull gitlab-runner
-    - docker-compose -f docker-compose.prod.yml up -d gitlab-runner
+    - docker-compose -f docker-compose.prod.yml -p prod up -d gitlab-runner
   tags:
     - production
 
 update-staging-runner:
   <<: *update-runners
   script:
-    - docker-compose -f docker-compose.services.yml pull gitlab-runner
-    - docker-compose -f docker-compose.services.yml up -d gitlab-runner
+    - docker-compose -f docker-compose.staging.yml pull gitlab-runner
+    - docker-compose -f docker-compose.staging.yml -p staging up -d gitlab-runner
   tags:
     - staging
-
-
-
