@@ -237,12 +237,10 @@ sudo docker run -d \
 * На этом этапе нужно зайти на **GitLab** и получить токен проекта из Settings->CI/CD.
 * При первом входе на **GitLab** нужно указать пароль пользователя `root`, есть проверка на сложность.
 * Заодно нужно установить в проекте переменные
-  * $DNS_PROVIDER_API_TOKEN и $LETSENCRYPT_EMAIL для контейнера letsencrypt-dns (см. ниже) или тех же целей у **Traefik**.
+  * $DNS_PROVIDER_API_TOKEN и $LETSENCRYPT_EMAIL для контейнера letsencrypt-dns (см. ниже) или другие, для же целей у **Traefik**.
   * $TZ, https://gitlab.com/gitlab-com/support-forum/issues/4051
 
 #### Поднимаем gitlab-runner
-* Доступ к /srv нужен, если захотим обновлять **Traefik**, **letsencrypt-dns** прямо из проекта на **GitLab** и управлять
-данными из gitlab-runner на хосте (например, удалить неисправную БД)
 ```shell script
 cd ~/project
 sudo docker-compose -f docker-compose.prod.yml -p prod up -d gitlab-runner
@@ -250,10 +248,13 @@ sudo docker-compose -f docker-compose.prod.yml -p prod up -d gitlab-runner
 sudo docker run -d --restart always --name gitlab-runner \
   -v /srv/gitlab-runner/config:/etc/gitlab-runner \
   -v /var/run/docker.sock:/var/run/docker.sock \
-  -v /srv:/srv \
   gitlab/gitlab-runner:latest
 ```
 #### Регистрируем gitlab-runner
+* Доступ к `/srv` нужен, если захотим управлять другими приложениями прямо из проекта на **GitLab**
+(например, удалить неисправную БД или обновить версию **Traefik**)
+* Расшаривание `/var/run/docker.sock` позволяет запускать контейнеры на хосте командой `docker`
+из раннера, самого запущенного в Docker
 ```shell script
 # Конфигурируем раннер с помощью другого контейнера, который будет запущен один раз.
 # Требуется docker.sock для использования в .gitlab-ci.yml образа с docker и docker-compose:
@@ -263,13 +264,14 @@ sudo docker run --rm -v /srv/gitlab-runner/config:/etc/gitlab-runner gitlab/gitl
   --executor "docker" \
   --docker-image "docker:stable" \
   --docker-volumes "/var/run/docker.sock:/var/run/docker.sock" \
+  --docker-volumes "/srv:/srv" \
   --url "https://gitlab.company.ru/" \
   --registration-token "<PROJECT_REGISTRATION_TOKEN>" \
   --description "Production server gitlab runner" \
   --tag-list "production" \
   --run-untagged="false" \
   --locked="false" \
-  --access-level="ref_protected"
+  --access-level="not_protected"
 ```
 
 #### Опционально letsencrypt-dns
@@ -307,11 +309,7 @@ sudo docker restart traefik
 ```
 
 ### Staging
-
 #### Поднимаем gitlab-runner
-Небольшое отличие от **Production**:  
-Монтирование `/srv/gitlab-runner/jobs/` пригодится чтобы можно было вытаскивать данные из контейнеров
-после тестов (например, скриншоты с тестов **Selenium** и др. артефакты).
 ```shell script
 cd ~/project
 # Создаём структуру папок
@@ -321,19 +319,22 @@ sudo docker-compose -f docker-compose.staging.yml -p staging up -d gitlab-runner
 sudo docker run -d --restart always --name gitlab-runner \
   -v /srv/gitlab-runner/config:/etc/gitlab-runner \
   -v /var/run/docker.sock:/var/run/docker.sock \
-  -v /srv/gitlab-runner/jobs/:/jobs \
   gitlab/gitlab-runner:latest
 ```
 
 #### Регистрируем gitlab-runner
+Небольшое отличие от **Production**:  
+Монтирование `/srv/gitlab-runner/shared_jobs/` пригодится, чтобы можно было вытаскивать данные из контейнеров
+после тестов (например, скриншоты с тестов **Selenium** и др. артефакты).
 ```shell script
 sudo docker run --rm -v /srv/gitlab-runner/config:/etc/gitlab-runner gitlab/gitlab-runner:latest register \
   --non-interactive \
   --executor "docker" \
   --docker-image "docker:stable" \
   --docker-volumes "/var/run/docker.sock:/var/run/docker.sock" \
-  --docker-volumes "/srv/gitlab-runner/jobs/:/logs/" \
-  --url "https://gitlab.company.ru/" \
+  --docker-volumes "/srv/gitlab-runner/shared_jobs:/shared_jobs" \
+  --docker-volumes "/srv:/srv" \
+  --url "https://gitlab.company.ru" \
   --registration-token "<PROJECT_REGISTRATION_TOKEN>" \
   --description "Staging server gitlab runner" \
   --tag-list "staging" \
