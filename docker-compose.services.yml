@@ -6,15 +6,16 @@ services:
     image: 'gitlab/gitlab-ce:latest'
     restart: always
     container_name: gitlab
-    hostname: 'gitlab.it34demo.sngy.ru'
+    hostname: 'gitlab.company.ru'
     environment:
       # https://community.hetzner.com/tutorials/gitlab-server-with-docker#step-5-prepare-the-registry
       # https://www.davd.io/byecloud-gitlab-with-docker-and-traefik/
       # https://forum.gitlab.com/t/container-registry-behind-reverse-proxy/6848/2
       GITLAB_OMNIBUS_CONFIG: |
         grafana['enable'] = false
-        external_url "https://gitlab.it34demo.sngy.ru"
+        external_url "https://gitlab.company.ru"
         nginx['proxy_set_headers'] = {
+        # $$ - экранирование $ в .yml для передачи в конфигурацию gitlab.rb
           "Host" => "$$http_host",
           "X-Real-IP" => "$$remote_addr",
           "X-Forwarded-For" => "$$proxy_add_x_forwarded_for",
@@ -25,7 +26,7 @@ services:
         nginx['listen_https'] = false
         gitlab_rails['time_zone'] = 'Europe/Volgograd'
         gitlab_rails['trusted_proxies'] = ['192.168.88.1', '192.168.88.2']
-        registry_external_url 'https://registry.it34demo.sngy.ru'
+        registry_external_url 'https://registry.company.ru'
         registry['enable'] =true
         registry_nginx['enable'] = true
         registry_nginx['proxy_set_headers'] = {

@@ -4,7 +4,7 @@ http:
     api:
       entryPoints:
         - "web-secure"
-      rule: "Host(`traefik.it34demo.sngy.ru`) && (PathPrefix(`/api`) || PathPrefix(`/dashboard`))"
+      rule: "Host(`traefik.company.ru`) && (PathPrefix(`/api`) || PathPrefix(`/dashboard`))"
       service: "api@internal"
       middlewares:
         - "apiAuth"
@@ -24,7 +24,7 @@ http:
     route-to-gitlab:
       entryPoints:
         - "web-secure"
-      rule: "Host(`gitlab.it34demo.sngy.ru`)"
+      rule: "Host(`gitlab.company.ru`)"
       middlewares:
         - "security-headers"
       service: "gitlab"
@@ -35,7 +35,7 @@ http:
     route-to-registry:
       entryPoints:
         - "web-secure"
-      rule: "Host(`registry.it34demo.sngy.ru`)"
+      rule: "Host(`registry.company.ru`)"
       middlewares:
         - "security-headers"
       service: "registry"
@@ -47,7 +47,7 @@ http:
       priority: 1
       entryPoints:
         - "web-secure"
-      rule: "Host(`it34demo.sngy.ru`)"
+      rule: "Host(`company.ru`)"
       middlewares:
         - "security-headers"
         - "WebSockets-header-proto"
@@ -158,12 +158,12 @@ tls:
         # алгоритм, чтобы MS EDGE не плевался
         - TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384
   certificates:
-    - certFile: /certs/dev.it34demo.sngy.ru.cert.pem
-      keyFile: /certs/dev.it34demo.sngy.ru.privkey.pem
+    - certFile: /certs/dev.company.ru.cert.pem
+      keyFile: /certs/dev.company.ru.privkey.pem
       stores:
         - default
   stores:
     default:
       defaultCertificate:
-        certFile: /certs/dev.it34demo.sngy.ru.cert.pem
-        keyFile: /certs/dev.it34demo.sngy.ru.privkey.pem
+        certFile: /certs/dev.company.ru.cert.pem
+        keyFile: /certs/dev.company.ru.privkey.pem

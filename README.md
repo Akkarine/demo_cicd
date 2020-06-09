@@ -1,6 +1,6 @@
 # Демо-проект с описанием инфраструктуры
 
-![infrastructure_diagram](img/scheme.svg)
+![infrastructure_diagram](img/scheme.png)
 
 ## Минимальные требования для построения:
 *  Наличие каких-либо мощностей в распоряжении. Может быть свой сервер, а может быть и облачная инфраструктура;
@@ -39,7 +39,7 @@
 и протестированные образы.
 
 ## Принятые решения
-* Statefull-данные докер-приложений храним в `/srv/<*проект*>/*<имя контейнера*>/`
+* Statefull-данные докер-приложений храним в `/srv/<проект>/<имя контейнера>/`
 * **Gitlab-runner** запускаем в **docker** и берем *docker-executor*.
 * Билдить и тестировать придется, расшаривая docker.sock для executor-ов **gitlab-runner**-а.
 * Удаленные подключения к докеру по TCP с сертификатом. 
@@ -237,7 +237,7 @@ sudo docker run -d \
 * На этом этапе нужно зайти на **GitLab** и получить токен проекта из Settings->CI/CD.
 * При первом входе на **GitLab** нужно указать пароль пользователя `root`, есть проверка на сложность.
 * Заодно нужно установить в проекте переменные
-  * $DNS_PROVIDER_API_TOKEN и $LETSENCRYPT_EMAIL для контейнера letsencrypt-dns (см. ниже) или другие, для же целей у **Traefik**.
+  * $DNS_PROVIDER_API_TOKEN и $LETSENCRYPT_EMAIL для контейнера letsencrypt-dns (см. ниже) или другие, для тех же целей у **Traefik**.
   * $TZ, https://gitlab.com/gitlab-com/support-forum/issues/4051
 
 #### Поднимаем gitlab-runner
@@ -359,8 +359,8 @@ concurrent=20
     * https://gist.github.com/acundari/9bdcf2ba0c0f8a4bf59a21d06da35612
     * https://stackoverflow.com/questions/52123355/how-to-implement-fail2ban-with-traefik
     * https://www.reddit.com/r/docker/comments/axmuj6/nginxtraefik_and_fail2ban_lost_on_how_to_configure/
-* Автоматизировать обслуживание GitLab Registry (чистка старых слоёв, удаление вручную в каждом проекте и затем )
-* Использовать для Docker Registry вместо GitLab Harbor или вместе со сборкой - Werf от Флант.
+* Автоматизировать обслуживание GitLab Registry (удаление устаревших тэгов в каждом проекте, чистка неиспользуемых слоёв)
+* ...или использовать для Docker Registry вместо GitLab Harbor или вместе со сборкой - Werf от Флант
 * Автоматизировать создание WC сертификатов для [**Staging**] и передачу их **Traefik**.
 Для простоты можно настроить перемещение по расписанию.
 
