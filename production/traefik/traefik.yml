@@ -44,8 +44,8 @@ accessLog:
 certificatesResolvers:
   letsencrypt:
     acme:
-      email: "kriv@sngy.ru"
+      email: "mail@company.com"
       storage: "/letsencrypt/acme.json"
       # закомменитровать caServer, если тестовый challenge будет успешен
-      # caServer: "https://acme-staging-v02.api.letsencrypt.org/directory"
+      caServer: "https://acme-staging-v02.api.letsencrypt.org/directory"
       tlsChallenge: {}
